@@ -13,7 +13,7 @@
 
 ## 🌐 Live Demo
 
-🚀 **Live Application**: [https://stylekarts.netlify.app](YOUR_LIVE_LINK_HERE)
+🚀 **Live Application**: [Live Demo]([https://stylekarts.netlify.app)
 
 ***
 
