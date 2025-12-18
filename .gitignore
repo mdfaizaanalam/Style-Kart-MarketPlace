@@ -1,0 +1,30 @@
+# =====================
+# Common
+# =====================
+node_modules/
+*.log
+.DS_Store
+
+# =====================
+# Client (Next.js)
+# =====================
+Client/node_modules/
+Client/.next/
+Client/out/
+Client/.env
+Client/.env.local
+
+# =====================
+# Server (Node / Express)
+# =====================
+Server/node_modules/
+Server/dist/
+Server/.env
+
+
+
+txt
+
+# Local Netlify folder
+.netlify
+netlify.toml
