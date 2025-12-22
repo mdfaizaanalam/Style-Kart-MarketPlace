@@ -3,6 +3,24 @@
 import React, { useState, useEffect } from 'react';
 import { X, Package, TrendingUp, DollarSign, ShoppingCart, Eye, Edit, Trash2, Plus, BarChart3, Users, Star, AlertCircle, Check } from 'lucide-react';
 import Footer from "../Footer";
+// Add these imports after your existing imports
+import {
+  PieChart,
+  Pie,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3500";
 
 interface OrderItem {
@@ -685,8 +703,7 @@ export default function EnhancedSellerDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Stats Grid */}
-            {/* Stats Grid */}
+            {/* Stats Grid - 4 Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard
                 icon={<Package className="w-8 h-8" />}
@@ -694,7 +711,6 @@ export default function EnhancedSellerDashboard() {
                 value={products.length}
                 color="blue"
               />
-
               <StatCard
                 icon={<ShoppingCart className="w-8 h-8" />}
                 title="Total Orders"
@@ -715,143 +731,511 @@ export default function EnhancedSellerDashboard() {
               />
             </div>
 
-            {/* Stock Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-[0.35fr_0.65fr] gap-8">
-              {/* Stock Status */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Stock Status</h3>
-                <div className="space-y-3">
-                  {/* In Stock */}
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">In Stock</span>
-                    <span className="text-green-600 font-bold">
-                      {products.filter(p => p.stock > 0).length}
-                    </span>
+            {/* Main Analytics Grid - LEFT: Charts, RIGHT: Stock & Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
+              {/* LEFT COLUMN - Charts */}
+              <div className="space-y-6">
+                {/* Order Status Distribution - Donut Chart */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-900">Order Status Distribution</h3>
+                    <div className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">
+                      Live Data
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-600 h-2 rounded-full transition-all"
-                      style={{
-                        width: `${products.length > 0
-                          ? (products.filter(p => p.stock > 0).length / products.length) * 100
-                          : 0
-                          }%`
-                      }}
-                    />
+                  <div className="h-80">
+                    {orders.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              {
+                                name: 'Confirmed',
+                                value: orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'confirmed').length,
+                                fill: '#3B82F6',
+                                icon: '📦'
+                              },
+                              {
+                                name: 'Delivered',
+                                value: orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'delivered').length,
+                                fill: '#10B981',
+                                icon: '✓'
+                              },
+                              {
+                                name: 'Cancelled',
+                                value: orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'cancelled').length,
+                                fill: '#EF4444',
+                                icon: '✗'
+                              },
+                              {
+                                name: 'Return Requested',
+                                value: orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'returnrequested').length,
+                                fill: '#F59E0B',
+                                icon: '↩'
+                              },
+                              {
+                                name: 'Returned',
+                                value: orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'returned').length,
+                                fill: '#8B5CF6',
+                                icon: '✅'
+                              }
+                            ].filter(item => item.value > 0)}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={110}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={(entry: any) => `${entry.value}`}
+                            labelLine={false}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'white',
+                              border: '1px solid #E5E7EB',
+                              borderRadius: '8px',
+                              padding: '8px 12px'
+                            }}
+                          />
+                          <Legend
+                            verticalAlign="bottom"
+                            height={36}
+                            iconType="circle"
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400">
+                        <div className="text-center">
+                          <ShoppingCart className="w-16 h-16 mx-auto mb-3 opacity-20" />
+                          <p className="text-sm font-medium">No orders yet</p>
+                          <p className="text-xs mt-1">Start selling to see analytics</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  {/* REMOVE DUPLICATE LINES - Keep only this section */}
-                  <div className="flex justify-between items-center mt-4">
-                    <span className="text-gray-600">Out of Stock</span>
-                    <span className="text-red-600 font-bold">
-                      {products.filter(p => p.stock === 0).length}
-                    </span>
+                {/* Revenue Trend - Area Chart */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-900">Revenue & Orders Trend</h3>
+                    <div className="flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                        <span className="text-gray-600">Revenue</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span className="text-gray-600">Orders</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-red-600 h-2 rounded-full transition-all"
-                      style={{
-                        width: `${products.length > 0
-                          ? (products.filter(p => p.stock === 0).length / products.length) * 100
-                          : 0
-                          }%`
-                      }}
-                    />
+                  <div className="h-72">
+                    {orders.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={(() => {
+                            const monthlyData: { [key: string]: { revenue: number; count: number } } = {};
+                            orders.forEach(order => {
+                              const date = new Date(order.order_date);
+                              const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                              if (!monthlyData[monthKey]) {
+                                monthlyData[monthKey] = { revenue: 0, count: 0 };
+                              }
+                              monthlyData[monthKey].revenue += parseFloat(order.totalprice as string || '0');
+                              monthlyData[monthKey].count += 1;
+                            });
+                            return Object.keys(monthlyData)
+                              .sort()
+                              .slice(-6)
+                              .map(month => ({
+                                month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short' }),
+                                revenue: Number(monthlyData[month].revenue.toFixed(2)),
+                                orders: monthlyData[month].count
+                              }));
+                          })()}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <XAxis
+                            dataKey="month"
+                            stroke="#9CA3AF"
+                            style={{ fontSize: '12px' }}
+                          />
+                          <YAxis
+                            yAxisId="left"
+                            stroke="#9CA3AF"
+                            style={{ fontSize: '12px' }}
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="#9CA3AF"
+                            style={{ fontSize: '12px' }}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'white',
+                              border: '1px solid #E5E7EB',
+                              borderRadius: '8px',
+                              padding: '8px 12px'
+                            }}
+                          />
+                          <Area
+                            yAxisId="left"
+                            type="monotone"
+                            dataKey="revenue"
+                            stroke="#8B5CF6"
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#colorRevenue)"
+                          />
+                          <Area
+                            yAxisId="right"
+                            type="monotone"
+                            dataKey="orders"
+                            stroke="#10B981"
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#colorOrders)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400">
+                        <div className="text-center">
+                          <TrendingUp className="w-16 h-16 mx-auto mb-3 opacity-20" />
+                          <p className="text-sm font-medium">No data available</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* RIGHT COLUMN - Stock Status & Quick Actions */}
+              <div className="space-y-6">
+                {/* Stock Status with Visual Bars */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Stock Status</h3>
+                  <div className="space-y-4">
+                    {/* In Stock */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-600">In Stock</span>
+                        <span className="text-sm font-bold text-green-600">
+                          {products.filter(p => p.stock > 0).length} items
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                          style={{
+                            width: `${products.length > 0
+                              ? (products.filter(p => p.stock > 0).length / products.length) * 100
+                              : 0
+                              }%`
+                          }}
+                        >
+                          <span className="text-[10px] font-bold text-white">
+                            {products.length > 0
+                              ? Math.round((products.filter(p => p.stock > 0).length / products.length) * 100)
+                              : 0}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center"
-                  >
-                    <Plus className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                    <span className="text-sm font-medium">Add Product</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('products')}
-                    className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center"
-                  >
-                    <Eye className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                    <span className="text-sm font-medium">View All</span>
-                  </button>
-                  <button
-                    onClick={toggleViewMode}
-                    className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center"
-                  >
-                    <BarChart3 className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                    <span className="text-sm font-medium">Marketplace</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('analytics')}
-                    className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-center"
-                  >
-                    <TrendingUp className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                    <span className="text-sm font-medium">Analytics</span>
-                  </button>
+                    {/* Out of Stock */}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-600">Out of Stock</span>
+                        <span className="text-sm font-bold text-red-600">
+                          {products.filter(p => p.stock === 0).length} items
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-red-400 to-red-600 h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                          style={{
+                            width: `${products.length > 0
+                              ? (products.filter(p => p.stock === 0).length / products.length) * 100
+                              : 0
+                              }%`
+                          }}
+                        >
+                          <span className="text-[10px] font-bold text-white">
+                            {products.length > 0
+                              ? Math.round((products.filter(p => p.stock === 0).length / products.length) * 100)
+                              : 0}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Low Stock Alert */}
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-amber-900">Low Stock Alert</p>
+                          <p className="text-xs text-amber-700 mt-1">
+                            {products.filter(p => p.stock > 0 && p.stock < 10).length} products need restocking
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setShowAddForm(true)}
+                      className="group p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center"
+                    >
+                      <Plus className="w-6 h-6 mx-auto mb-2 text-gray-400 group-hover:text-blue-500 transition" />
+                      <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-600">Add Product</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('products')}
+                      className="group p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center"
+                    >
+                      <Eye className="w-6 h-6 mx-auto mb-2 text-gray-400 group-hover:text-blue-500 transition" />
+                      <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-600">View All</span>
+                    </button>
+
+                    <button
+                      onClick={toggleViewMode}
+                      className="group p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center"
+                    >
+                      <BarChart3 className="w-6 h-6 mx-auto mb-2 text-gray-400 group-hover:text-blue-500 transition" />
+                      <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-600">Marketplace</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('analytics')}
+                      className="group p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center"
+                    >
+                      <TrendingUp className="w-6 h-6 mx-auto mb-2 text-gray-400 group-hover:text-blue-500 transition" />
+                      <span className="text-xs font-semibold text-gray-600 group-hover:text-blue-600">Analytics</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Performance Metrics */}
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                  <h3 className="text-lg font-bold mb-4">Performance Metrics</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center pb-3 border-b border-blue-400">
+                      <span className="text-sm opacity-90">Success Rate</span>
+                      <span className="text-xl font-bold">
+                        {orders.length > 0
+                          ? Math.round((orders.filter(o => o.status.toLowerCase() === 'delivered').length / orders.length) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-blue-400">
+                      <span className="text-sm opacity-90">Avg Order Value</span>
+                      <span className="text-xl font-bold">
+                        ${orders.length > 0
+                          ? (orders.reduce((sum, order) => sum + parseFloat(order.totalprice as string || '0'), 0) / orders.length).toFixed(2)
+                          : '0.00'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm opacity-90">Return Rate</span>
+                      <span className="text-xl font-bold">
+                        {orders.length > 0
+                          ? Math.round((orders.filter(o => {
+                            const status = o.status.toLowerCase().replace(/[\s_-]+/g, '');
+                            return status === 'returned' || status === 'returnrequested';
+                          }).length / orders.length) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Recent Products */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Products</h3>
+            {/* Order Status Summary Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border-l-4 border-blue-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">📦</span>
+                  <span className="text-xs font-semibold text-blue-600 bg-white px-2 py-1 rounded-full">
+                    New
+                  </span>
+                </div>
+                <p className="text-sm text-blue-600 font-medium mb-1">Confirmed</p>
+                <p className="text-2xl font-bold text-blue-700">
+                  {orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'confirmed').length}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border-l-4 border-green-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">✓</span>
+                  <span className="text-xs font-semibold text-green-600 bg-white px-2 py-1 rounded-full">
+                    Done
+                  </span>
+                </div>
+                <p className="text-sm text-green-600 font-medium mb-1">Delivered</p>
+                <p className="text-2xl font-bold text-green-700">
+                  {orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'delivered').length}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border-l-4 border-red-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">✗</span>
+                  <span className="text-xs font-semibold text-red-600 bg-white px-2 py-1 rounded-full">
+                    Lost
+                  </span>
+                </div>
+                <p className="text-sm text-red-600 font-medium mb-1">Cancelled</p>
+                <p className="text-2xl font-bold text-red-700">
+                  {orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'cancelled').length}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border-l-4 border-orange-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">↩</span>
+                  <span className="text-xs font-semibold text-orange-600 bg-white px-2 py-1 rounded-full">
+                    Pending
+                  </span>
+                </div>
+                <p className="text-sm text-orange-600 font-medium mb-1">Returns</p>
+                <p className="text-2xl font-bold text-orange-700">
+                  {orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'returnrequested').length}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-l-4 border-purple-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">✅</span>
+                  <span className="text-xs font-semibold text-purple-600 bg-white px-2 py-1 rounded-full">
+                    Refunded
+                  </span>
+                </div>
+                <p className="text-sm text-purple-600 font-medium mb-1">Returned</p>
+                <p className="text-2xl font-bold text-purple-700">
+                  {orders.filter(o => o.status.toLowerCase().replace(/[\s_-]+/g, '') === 'returned').length}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border-l-4 border-gray-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">📊</span>
+                  <span className="text-xs font-semibold text-gray-600 bg-white px-2 py-1 rounded-full">
+                    All
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 font-medium mb-1">Total</p>
+                <p className="text-2xl font-bold text-gray-700">
+                  {orders.length}
+                </p>
+              </div>
+            </div>
+
+            {/* Recent Products Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-gray-900">Recent Products</h3>
+                  <button
+                    onClick={() => setActiveTab('products')}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
+                  >
+                    View All →
+                  </button>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {products.slice(0, 5).map((product) => (
-                      <tr key={product.productid}>
+                      <tr key={product.productid} className="hover:bg-gray-50 transition">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
+                            <div className="h-12 w-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                               {product.imglink ? (
-                                <img className="h-10 w-10 rounded object-cover" src={product.imglink} alt="" />
+                                <img className="h-12 w-12 object-cover" src={product.imglink} alt="" />
                               ) : (
-                                <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                                  <Package className="w-5 h-5 text-gray-400" />
+                                <div className="h-12 w-12 flex items-center justify-center">
+                                  <Package className="w-6 h-6 text-gray-400" />
                                 </div>
                               )}
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{product.title.substring(0, 40)}{product.title.length > 40 ? '...' : ''}</div>
+                              <div className="text-sm font-semibold text-gray-900">
+                                {product.title.substring(0, 40)}{product.title.length > 40 ? '...' : ''}
+                              </div>
+                              <div className="text-xs text-gray-500">ID: {product.productid}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.price}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.stock}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-gray-900">${product.price}</div>
+                          {product.discount > 0 && (
+                            <div className="text-xs text-red-500">{product.discount}% OFF</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-900">{product.stock}</div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${product.stock > 10
+                                ? 'bg-green-100 text-green-800'
+                                : product.stock > 0
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
                               }`}
                           >
-                            {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                            {product.stock > 10 ? 'In Stock' : product.stock > 0 ? 'Low Stock' : 'Out of Stock'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
                             onClick={() => openProductDetail(product)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
+                            className="text-blue-600 hover:text-blue-900 mr-4 font-medium"
                           >
-                            <Eye className="w-4 h-4 inline" />
+                            <Eye className="w-4 h-4 inline mr-1" />
+                            View
                           </button>
                           <button
                             onClick={() => handleRemoveProduct(product.productid)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 font-medium"
                           >
-                            <Trash2 className="w-4 h-4 inline" />
+                            <Trash2 className="w-4 h-4 inline mr-1" />
+                            Delete
                           </button>
                         </td>
                       </tr>
